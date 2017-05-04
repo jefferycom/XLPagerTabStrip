@@ -62,6 +62,7 @@ open class PagerTabStripViewController: UIViewController, UIScrollViewDelegate {
     
     open private(set) var viewControllers = [UIViewController]()
     open private(set) var currentIndex = 0
+    open private(set) var preCurrentIndex = 0
     
     open var pageWidth: CGFloat {
         return containerView.bounds.width
@@ -123,6 +124,10 @@ open class PagerTabStripViewController: UIViewController, UIScrollViewDelegate {
         super.viewDidAppear(animated)
         lastSize = containerView.bounds.size
         updateIfNeeded()
+        let needToUpdateCurrentChild = preCurrentIndex != currentIndex
+        if needToUpdateCurrentChild {
+            moveToViewController(at: preCurrentIndex)
+        }
         isViewAppearing = false
         childViewControllers.forEach { $0.endAppearanceTransition() }
     }
@@ -148,9 +153,12 @@ open class PagerTabStripViewController: UIViewController, UIScrollViewDelegate {
     
     open func moveToViewController(at index: Int, animated: Bool = true) {
         guard isViewLoaded && view.window != nil && currentIndex != index else {
-            currentIndex = index
+            preCurrentIndex = index
             return
         }
+        
+        preCurrentIndex = currentIndex
+        
         if animated && pagerBehaviour.skipIntermediateViewControllers && abs(currentIndex - index) > 1 {
             var tmpViewControllers = viewControllers
             let currentChildVC = viewControllers[currentIndex]
